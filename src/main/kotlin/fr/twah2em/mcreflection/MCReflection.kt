@@ -2,12 +2,13 @@ package fr.twah2em.mcreflection
 
 import org.apache.commons.lang3.Validate
 import org.bukkit.Bukkit
+import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 
-private val CRAFT_BUKKIT_PREFIX = Bukkit.getServer().javaClass.packageName
+private val CRAFT_BUKKIT_PREFIX = Bukkit.getServer().javaClass.`package`.name
 private val NMS_PREFIX = CRAFT_BUKKIT_PREFIX.replace("org.bukkit.craftbukkit", "net.minecraft.server")
 
 val version = CRAFT_BUKKIT_PREFIX.substring(CRAFT_BUKKIT_PREFIX.lastIndexOf(".") + 1) + "."
@@ -16,24 +17,30 @@ fun sendPacket(receiver: Player, packet: Any) {
     Validate.notNull(receiver, "Receiver cannot be null")
     Validate.notNull(packet, "Packet cannot be null")
 
-    val packetClass = getNMSClass("Packet")
-    val entityPlayerClass = getNMSClass("EntityPlayer")
-    val playerConnectionField = getField(entityPlayerClass, "playerConnection")
+    val packetClass = NMSClass("Packet")
+    val entityPlayerClass = NMSClass("EntityPlayer")
+    val playerConnectionField = field(entityPlayerClass!!, "playerConnection")
 
-    val sendPacketMethod = getMethod(playerConnectionField!!.type, "sendPacket", packetClass)
+    val sendPacketMethod = method(playerConnectionField!!.type, "sendPacket", packetClass!!)
 
-    val entityPlayer = getHandle(receiver)
+    val entityPlayer = handle(receiver)
     val playerConnection = playerConnectionField.get(entityPlayer)
 
     sendPacketMethod!!.invoke(playerConnection, packet)
 }
 
-fun getHandle(any: Any): Any? {
-    Validate.notNull(any, "Object cannot be null")
-    Validate.isInstanceOf(getCraftBukkitClass("CraftPlayer"), any, "Object must be CraftPlayer")
+fun <T : Any> getPacket(className: String, vararg arguments: T): Any {
+    val packetClass = NMSClass(className)
 
+    val classes = arguments.map { it.javaClass }.toTypedArray()
+    val packetConstructor = constructor(packetClass!!, classes)
+
+    return invokeConstructor(packetConstructor!!, arguments)
+}
+
+fun handle(player: OfflinePlayer): Any? {
     try {
-        return getMethod(any.javaClass, "getHandle")!!.invoke(any)
+        return method(player.javaClass, "getHandle")!!.invoke(player)
     } catch (e: Exception) {
         e.printStackTrace()
     }
@@ -41,9 +48,7 @@ fun getHandle(any: Any): Any? {
     return null
 }
 
-fun getNMSClass(className: String): Class<*>? {
-    Validate.notNull(className, "Class name cannot be null")
-
+fun NMSClass(className: String): Class<*>? {
     try {
         return Class.forName("$NMS_PREFIX.$className")
     } catch (e: ClassNotFoundException) {
@@ -53,9 +58,7 @@ fun getNMSClass(className: String): Class<*>? {
     return null
 }
 
-fun getCraftBukkitClass(className: String): Class<*>? {
-    Validate.notNull(className, "Class name cannot be null")
-
+fun craftBukkitClass(className: String): Class<*>? {
     try {
         return Class.forName("$CRAFT_BUKKIT_PREFIX.$className")
     } catch (e: ClassNotFoundException) {
@@ -65,12 +68,9 @@ fun getCraftBukkitClass(className: String): Class<*>? {
     return null
 }
 
-fun getField(clazz: Class<*>?, fieldName: String): Field? {
-    Validate.notNull(clazz, "Class cannot be null")
-    Validate.notNull(fieldName, "Field name cannot be null")
-
+fun field(clazz: Class<*>, fieldName: String): Field? {
     try {
-        return clazz!!.getDeclaredField(fieldName)
+        return clazz.getDeclaredField(fieldName)
     } catch (e: NoSuchFieldException) {
         e.printStackTrace()
     }
@@ -78,10 +78,7 @@ fun getField(clazz: Class<*>?, fieldName: String): Field? {
     return null
 }
 
-fun setField(field: Field, obj: Any, value: Any) {
-    Validate.notNull(field, "Field cannot be null")
-    Validate.notNull(obj, "Object cannot be null")
-
+fun field(field: Field, obj: Any, value: Any) {
     try {
         field.isAccessible = true
         field.set(obj, value)
@@ -90,13 +87,9 @@ fun setField(field: Field, obj: Any, value: Any) {
     }
 }
 
-fun getMethod(clazz: Class<*>?, methodName: String, vararg parameterTypes: Class<*>?): Method? {
-    Validate.notNull(clazz, "Class cannot be null")
-    Validate.notNull(methodName, "Method name cannot be null")
-    Validate.notNull(parameterTypes, "Parameter types cannot be null")
-
+fun method(clazz: Class<*>, methodName: String, vararg parameterTypes: Class<*>): Method? {
     try {
-        return clazz!!.getDeclaredMethod(methodName, *parameterTypes)
+        return clazz.getDeclaredMethod(methodName, *parameterTypes)
     } catch (e: NoSuchMethodException) {
         e.printStackTrace()
     }
@@ -104,20 +97,25 @@ fun getMethod(clazz: Class<*>?, methodName: String, vararg parameterTypes: Class
     return null
 }
 
-fun <T : Enum<T>> getEnumValue(enumFullName: Class<T>, enumValue: String): T {
+fun <T> invokeMethod(method: Method, obj: Any, vararg args: Any): T {
+    method.isAccessible = true
+
+    return method.invoke(obj, args) as T
+}
+
+fun <T : Enum<T>> enumValue(enumFullName: Class<T>, enumValue: String): T {
     return enumFullName.cast(
         enumFullName.javaClass.getDeclaredMethod("valueOf", String::class.java).invoke(enumFullName, enumValue)
     )
 }
 
-fun getConstructor(clazz: Class<*>?, vararg parameterTypes: Class<*>?): Constructor<*>? {
-    Validate.notNull(clazz, "Class cannot be null")
-    Validate.notNull(parameterTypes, "Parameter types cannot be null")
+fun constructor(clazz: Class<*>, parameterTypes: Array<out Class<*>?>): Constructor<*>? {
+    val primitiveTypes: Array<Class<*>> = parameterTypes
+        .filterNotNull()
+        .map { PrimitiveAndWrapper.primitive(it) }
+        .toTypedArray()
 
-    val primitiveTypes: Array<Class<*>> = Array(parameterTypes.size) {
-        PrimitiveAndWrapper.primitive(parameterTypes[it]!!)
-    }
-    for (constructor in clazz!!.constructors) {
+    for (constructor in clazz.constructors) {
         if (!PrimitiveAndWrapper.compare(
                 PrimitiveAndWrapper.primitive(
                     constructor.parameterTypes
@@ -131,4 +129,10 @@ fun getConstructor(clazz: Class<*>?, vararg parameterTypes: Class<*>?): Construc
     }
 
     return null
+}
+
+fun <T> invokeConstructor(constructor: Constructor<T>, vararg parameterTypes: Any): T {
+    constructor.isAccessible = true
+
+    return constructor.newInstance(parameterTypes)
 }
