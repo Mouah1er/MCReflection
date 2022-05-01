@@ -38,14 +38,12 @@ fun <T : Any> getPacket(className: String, vararg arguments: T): Any {
     return invokeConstructor(packetConstructor!!, arguments)
 }
 
-fun handle(player: OfflinePlayer): Any? {
-    try {
-        return method(player.javaClass, "getHandle")!!.invoke(player)
+fun handle(craftBukkitObj: Any): Any? {
+    return try {
+        invokeMethod<Any>(method(craftBukkitObj.javaClass, "getHandle")!!, craftBukkitObj)
     } catch (e: Exception) {
-        e.printStackTrace()
+        null
     }
-
-    return null
 }
 
 fun NMSClass(className: String): Class<*>? {
@@ -69,13 +67,7 @@ fun craftBukkitClass(className: String): Class<*>? {
 }
 
 fun field(clazz: Class<*>, fieldName: String): Field? {
-    try {
-        return clazz.getDeclaredField(fieldName)
-    } catch (e: NoSuchFieldException) {
-        e.printStackTrace()
-    }
-
-    return null
+    return clazz.getDeclaredField(fieldName)
 }
 
 fun field(field: Field, obj: Any, value: Any) {
@@ -87,14 +79,8 @@ fun field(field: Field, obj: Any, value: Any) {
     }
 }
 
-fun method(clazz: Class<*>, methodName: String, vararg parameterTypes: Class<*>): Method? {
-    try {
-        return clazz.getDeclaredMethod(methodName, *parameterTypes)
-    } catch (e: NoSuchMethodException) {
-        e.printStackTrace()
-    }
-
-    return null
+fun method(clazz: Class<*>, methodName: String, vararg parameterTypes: Class<*>): Method {
+    return clazz.getDeclaredMethod(methodName, *parameterTypes)
 }
 
 fun <T> invokeMethod(method: Method, obj: Any, vararg args: Any): T {
