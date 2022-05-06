@@ -1,6 +1,6 @@
 package fr.twah2em.mcreflection
 
-enum class PrimitiveAndWrapper(private val primitive: Class<*>, private val wrapper: Class<*>) {
+enum class PrimitiveAndWrapper(val primitive: Class<*>, val wrapper: Class<*>) {
     BYTE(Byte::class.javaPrimitiveType!!.javaClass, Byte::class.java),
     SHORT(Short::class.javaPrimitiveType!!.javaClass, Short::class.java),
     INTEGER(Int::class.javaPrimitiveType!!.javaClass, Int::class.java),
