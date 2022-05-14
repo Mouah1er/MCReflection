@@ -26,7 +26,7 @@ fun sendPacket(receiver: Player, packet: Any) {
     val entityPlayer = handle(receiver)
     val playerConnection = playerConnectionField.get(entityPlayer)
 
-    sendPacketMethod!!.invoke(playerConnection, packet)
+    sendPacketMethod.invoke(playerConnection, packet)
 }
 
 fun <T : Any> getPacket(className: String, vararg arguments: T): Any {
@@ -40,7 +40,7 @@ fun <T : Any> getPacket(className: String, vararg arguments: T): Any {
 
 fun handle(craftBukkitObj: Any): Any? {
     return try {
-        invokeMethod<Any>(method(craftBukkitObj.javaClass, "getHandle")!!, craftBukkitObj)
+        invokeMethod<Any>(method(craftBukkitObj.javaClass, "getHandle"), craftBukkitObj)
     } catch (e: Exception) {
         null
     }

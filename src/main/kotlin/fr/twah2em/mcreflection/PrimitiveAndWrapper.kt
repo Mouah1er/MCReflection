@@ -1,13 +1,13 @@
 package fr.twah2em.mcreflection
 
 enum class PrimitiveAndWrapper(val primitive: Class<*>, val wrapper: Class<*>) {
-    BYTE(Byte::class.javaPrimitiveType!!.javaClass, Byte::class.java),
-    SHORT(Short::class.javaPrimitiveType!!.javaClass, Short::class.java),
-    INTEGER(Int::class.javaPrimitiveType!!.javaClass, Int::class.java),
-    LONG(Long::class.javaPrimitiveType!!.javaClass, Long::class.java),
-    FLOAT(Float::class.javaPrimitiveType!!.javaClass, Float::class.java),
-    DOUBLE(Double::class.javaPrimitiveType!!.javaClass, Double::class.java),
-    BOOLEAN(Boolean::class.javaPrimitiveType!!.javaClass, Boolean::class.java),
+    BYTE(Byte::class.java, Class.forName("java.lang.Byte")),
+    SHORT(Short::class.java, Class.forName("java.lang.Short")),
+    INTEGER(Int::class.java, Class.forName("java.lang.Integer")),
+    LONG(Long::class.java, Class.forName("java.lang.Long")),
+    FLOAT(Float::class.java, Class.forName("java.lang.Float")),
+    DOUBLE(Double::class.java, Class.forName("java.lang.Double")),
+    BOOLEAN(Boolean::class.java, Class.forName("java.lang.Boolean")),
 
     ;
 

@@ -4,7 +4,7 @@ plugins {
 }
 
 group 'fr.twah2em'
-version '1.4.1-SNAPSHOT'
+version '1.5.0-SNAPSHOT'
 
 publishing {
     publications {
@@ -39,7 +39,7 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
 }
 
-libsDirName = "${property("libs-dir-name")}"
+//libsDirName = "${property("libs-dir-name")}"
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
