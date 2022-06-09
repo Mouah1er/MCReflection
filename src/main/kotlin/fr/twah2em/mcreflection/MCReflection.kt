@@ -2,7 +2,6 @@ package fr.twah2em.mcreflection
 
 import org.apache.commons.lang3.Validate
 import org.bukkit.Bukkit
-import org.bukkit.OfflinePlayer
 import org.bukkit.entity.Player
 import java.lang.reflect.Constructor
 import java.lang.reflect.Field
@@ -95,26 +94,8 @@ fun <T : Enum<T>> enumValue(enumFullName: Class<T>, enumValue: String): T {
     )
 }
 
-fun constructor(clazz: Class<*>, parameterTypes: Array<out Class<*>?>): Constructor<*>? {
-    val primitiveTypes: Array<Class<*>> = parameterTypes
-        .filterNotNull()
-        .map { PrimitiveAndWrapper.primitive(it) }
-        .toTypedArray()
-
-    for (constructor in clazz.constructors) {
-        if (!PrimitiveAndWrapper.compare(
-                PrimitiveAndWrapper.primitive(
-                    constructor.parameterTypes
-                ), primitiveTypes
-            )
-        ) {
-            continue
-        }
-
-        return constructor
-    }
-
-    return null
+fun <T> constructor(clazz: Class<T>, parameterTypes: Array<out Class<*>?>): Constructor<T>? {
+    return clazz.getDeclaredConstructor(*parameterTypes)
 }
 
 fun <T> invokeConstructor(constructor: Constructor<T>, vararg parameterTypes: Any): T {
