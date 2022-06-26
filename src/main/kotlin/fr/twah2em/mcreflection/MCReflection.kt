@@ -28,11 +28,11 @@ fun sendPacket(receiver: Player, packet: Any) {
     sendPacketMethod.invoke(playerConnection, packet)
 }
 
-fun <T : Any> getPacket(className: String, vararg arguments: T): Any {
+fun packet(className: String, vararg arguments: Any): Any {
     val packetClass = NMSClass(className)
 
     val classes = arguments.map { it.javaClass }.toTypedArray()
-    val packetConstructor = constructor(packetClass!!, classes)
+    val packetConstructor = constructor(packetClass!!, *classes)
 
     return invokeConstructor(packetConstructor!!, arguments)
 }
@@ -94,7 +94,7 @@ fun <T : Enum<T>> enumValue(enumFullName: Class<T>, enumValue: String): T {
     )
 }
 
-fun <T> constructor(clazz: Class<T>, parameterTypes: Array<out Class<*>?>): Constructor<T>? {
+fun <T> constructor(clazz: Class<T>, vararg parameterTypes: Class<*>): Constructor<T>? {
     return clazz.getDeclaredConstructor(*parameterTypes)
 }
 
