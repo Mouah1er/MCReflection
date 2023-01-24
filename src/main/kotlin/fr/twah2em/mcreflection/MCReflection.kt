@@ -10,7 +10,7 @@ import java.lang.reflect.Method
 private val CRAFT_BUKKIT_PREFIX = Bukkit.getServer().javaClass.`package`.name
 private val NMS_PREFIX = CRAFT_BUKKIT_PREFIX.replace("org.bukkit.craftbukkit", "net.minecraft.server")
 
-val version = CRAFT_BUKKIT_PREFIX.substring(CRAFT_BUKKIT_PREFIX.lastIndexOf(".") + 1) + "."
+val version = Integer.parseInt(Bukkit.getBukkitVersion());
 
 fun sendPacket(receiver: Player, packet: Any) {
     Validate.notNull(receiver, "Receiver cannot be null")
@@ -47,7 +47,11 @@ fun handle(craftBukkitObj: Any): Any? {
 
 fun NMSClass(className: String): Class<*>? {
     try {
+      if (version < 1.17) {
         return Class.forName("$NMS_PREFIX.$className")
+      } else if (version >= 1.17) {
+      	  return Class.forName("net.minecraft.$className")
+      }
     } catch (e: ClassNotFoundException) {
         e.printStackTrace()
     }
