@@ -10,7 +10,7 @@ import java.lang.reflect.Method
 private val CRAFT_BUKKIT_PREFIX = Bukkit.getServer().javaClass.`package`.name
 private val NMS_PREFIX = CRAFT_BUKKIT_PREFIX.replace("org.bukkit.craftbukkit", "net.minecraft.server")
 
-val version = Integer.parseInt(Bukkit.getBukkitVersion());
+val version = Integer.parseInt(Bukkit.getBukkitVersion().substring(14, 19))
 
 fun sendPacket(receiver: Player, packet: Any) {
     Validate.notNull(receiver, "Receiver cannot be null")
